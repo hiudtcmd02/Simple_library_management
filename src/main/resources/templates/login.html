@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 60px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        a {
+            display: block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        #message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Đăng nhập</h2>
+    <form id="loginForm">
+        <label for="username">Tài khoản:</label>
+        <input type="text" id="username" placeholder="Tài khoản" required></br></br>
+        <label for="password">Mật khẩu:</label>
+        <input type="password" id="password" placeholder="Mật khẩu" required></br></br>
+        <button type="submit">Đăng nhập</button>
+    </form>
+    </br>
+    <a href="/">Quay lại trang chủ</a></br></br>
+    <div id="message" style="color: red;"></div> <!-- Thông báo lỗi -->
+</div>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                username: username,
+                password: password
+            })
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/adminHome'; // Chuyển hướng đến trang chủ nhân viên thư viện
+                } else {
+                    document.getElementById('message').innerText = "Đăng nhập thất bại!"
+                    return response.text(); // Lấy thông báo lỗi từ server
+                }
+            })
+            .then(data => {
+                if (data) {
+                    document.getElementById('message').innerText = data; // Hiển thị thông báo đăng nhập thất bại
+                }
+            })
+            .catch(() => {
+                document.getElementById('message').innerText = "An error occurred. Please try again."; // Hiển thị thông báo lỗi chung
+            });
+    });
+</script>
+</body>
+</html>

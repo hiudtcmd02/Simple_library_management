@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Xem thông tin thẻ bạn đọc</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Khoảng cách giữa các trường */
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="date"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box; /* Đảm bảo padding không làm tăng chiều rộng */
+        }
+        p {
+            margin: 5px 0; /* Khoảng cách cho các đoạn văn */
+        }
+        span {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #responseMessage {
+            margin-top: 15px;
+            color: #00e600;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Thông tin thẻ bạn đọc</h1>
+    <form id="readerCardDetails">
+        <span id="readerId" style="display: none;"></span>
+        <p>Mã thẻ: <span id="maThe"></span></p>
+        <p>Họ tên: <span id="hoTen"></span></p>
+        <p>Lớp: <span id="lop"></span></p>
+        <p>Vai trò: <span id="vaiTro"></span></p>
+
+        <label for="ngayTaoThe">Ngày tạo thẻ:</label>
+        <input type="date" id="ngayTaoThe" name="ngayTaoThe" required>
+
+        <label for="ngayHetHan">Ngày hết hạn:</label>
+        <input type="date" id="ngayHetHan" name="ngayHetHan" required>
+
+        <button type="submit">Lưu</button>
+    </form>
+    <div id="responseMessage"></div><br>
+    <button onclick="goBack()">Quay lại</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const readerId = urlParams.get('id');
+
+        fetch(`/readerData/getData/detailReader/${readerId}`)
+            .then(response => response.json())
+            .then(bandoc => {
+                document.getElementById('readerId').innerText = bandoc.id;
+                document.getElementById('maThe').innerText = formatToMTBD(bandoc.id);
+                document.getElementById('hoTen').innerText = bandoc.hoTen;
+                document.getElementById('lop').innerText = bandoc.lop;
+                document.getElementById('vaiTro').innerText = bandoc.vaiTro;
+            });
+    });
+
+    function formatToMTBD(num) {
+        return 'MTBD' + num.toString().padStart(6, '0');
+    }
+
+    document.getElementById('readerCardDetails').addEventListener('submit', function(e) {
+        e.preventDefault(); // Ngăn chặn hành vi mặc định của form
+
+        // Lấy giá trị từ các trường
+        const maThe = document.getElementById('maThe').innerText;
+        const hoTen = document.getElementById('hoTen').innerText;
+        const lop = document.getElementById('lop').innerText;
+        const vaiTro = document.getElementById('vaiTro').innerText;
+        const ngayTaoThe = document.getElementById('ngayTaoThe').value;
+        const ngayHetHan = document.getElementById('ngayHetHan').value;
+        const banDocId = document.getElementById('readerId').innerText;
+        const ngayTaoThe2 = convertDateFormat(document.getElementById('ngayTaoThe').value);
+        const ngayHetHan2 = convertDateFormat(document.getElementById('ngayHetHan').value);
+
+        const formData = {
+            maThe: maThe,
+            ngayTaoThe: ngayTaoThe,
+            ngayHetHan: ngayHetHan,
+            banDocId: banDocId,
+        };
+
+        fetch('/readerCardData/postData/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('responseMessage').innerText = data;
+
+                // Tạo file DOC
+                const docContent = `
+                Mã thẻ: ${maThe}
+                Họ tên: ${hoTen}
+                Lớp: ${lop}
+                Vai trò: ${vaiTro}
+                Ngày tạo thẻ: ${ngayTaoThe2}
+                Ngày hết hạn: ${ngayHetHan2}
+            `;
+
+                // Chuyển đổi nội dung thành Blob và tải về
+                const blob = new Blob([docContent], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${maThe}.doc`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    function convertDateFormat(dateString) {
+        // Kiểm tra định dạng đầu vào
+        const regex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!regex.test(dateString)) {
+            return dateString; //Trả về giá trị cũ nếu định dạng không phù hợp
+        }
+
+        // Tách các phần của ngày
+        const [year, month, day] = dateString.split('-');
+
+        // Trả về định dạng mới
+        return `${day}-${month}-${year}`;
+    }
+
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
+</body>
+</html>

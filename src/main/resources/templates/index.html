@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang chủ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button.primary {
+            background-color: #007bff; /* Màu xanh cho nút Đăng nhập */
+            color: white;
+        }
+        button.primary:hover {
+            background-color: #0056b3;
+        }
+        button.secondary {
+            background-color: #28a745; /* Màu xanh cho nút Tìm kiếm */
+            color: white;
+        }
+        button.secondary:hover {
+            background-color: #218838;
+        }
+        input[type="text"], select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .search-container, .filter-container {
+            margin-bottom: 20px;
+        }
+        #table_All_Doc {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            background-color: #007bff;
+            color: white;
+            border-radius: 3px;
+            margin: 0 5px;
+        }
+        .pagination button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none; /* Ẩn cột này */
+        }
+    </style>
+</head>
+<body>
+    <h1>Trang chủ</h1>
+    <button class="primary" onclick="window.location.href='/login'">Đăng nhập</button></br></br>
+
+    <div class="search-container">
+        <h3>Tìm kiếm tài liệu:</h3>
+        <input type="text" id="timKiemTaiLieu" placeholder="Nhập tên tài liệu" />
+        <button class="secondary" id="searchButton">Tìm kiếm</button>
+    </div>
+
+    <div class="filter-container">
+        <h3>Lọc theo thể loại:</h3>
+        <select id="docTypeToSearch"></select>
+        <button class="secondary" id="searchTypeButton">Lọc</button>
+    </div>
+
+    <div id="table_All_Doc">
+        <h2>Danh sách tài liệu</h2>
+        <table id="listDoc" border="1">
+            <thead>
+            <tr>
+                <th class="hidden">ID</th>
+                <th>Hình ảnh</th>
+                <th>Tên tài liệu</th>
+                <th>Đơn giá</th>
+                <th>Mô tả</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="listDocData"></tbody>
+        </table>
+        <label style="font-weight: bolder" for="paginationControls"> Trang: </label>
+        <div class="pagination" id="paginationControls"></div>
+    </div>
+
+    <script>
+        let docList = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch(`/docData/getData/listDoc`)
+                .then(response => response.json())
+                .then(data => {
+                    docList = data;
+                    renderTable();
+                    renderPagination();
+                });
+
+            fetch('/admin/getData/listDocType')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('docTypeToSearch');
+
+                    const allOption = document.createElement('option');
+                    allOption.value = 0;
+                    allOption.textContent = "Tất cả";
+                    select.appendChild(allOption);
+
+                    data.forEach(loai => {
+                        const option = document.createElement('option');
+                        option.value = loai.id;
+                        option.textContent = loai.tenLoaiTaiLieu;
+                        select.appendChild(option);
+                    });
+                });
+        });
+
+        //Tìm kiếm tài liệu theo tên
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const tenTaiLieu = document.getElementById('timKiemTaiLieu').value;
+            searchDoc(tenTaiLieu);
+        });
+
+        function searchDoc(tenTaiLieu) {
+            fetch(`/docData/getData/searchDoc?name=${tenTaiLieu}`)
+                .then(response => response.json())
+                .then(data => {
+                    docList = data;
+                    currentPage = 1; // Reset về trang 1 khi tìm kiếm
+                    renderTable();
+                    renderPagination();
+                });
+        }
+
+        //Lọc tài liệu theo loại tài liệu
+        document.getElementById('searchTypeButton').addEventListener('click', function() {
+            const loaiTaiLieu = document.getElementById('docTypeToSearch').value;
+            searchByDocType(loaiTaiLieu);
+        });
+
+        function searchByDocType(loaiTaiLieu) {
+            fetch(`/homeData/getData/searchByDocType?docTypeId=${loaiTaiLieu}`)
+                .then(response => response.json())
+                .then(data => {
+                    docList = data;
+                    currentPage = 1; // Reset về trang 1 khi tìm kiếm
+                    renderTable();
+                    renderPagination();
+                });
+        }
+
+        function renderTable() {
+            const list = document.getElementById('listDocData');
+            list.innerHTML = ''; // Xóa nội dung cũ
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = docList.slice(start, end);
+
+            paginatedItems.forEach(taiLieu => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="hidden">${taiLieu.id}</td>
+                    <td><img src="${taiLieu.hinhAnh}" alt="Hình ảnh" width="120" height="140"></td>
+                    <td>${taiLieu.tenTaiLieu}</td>
+                    <td>${taiLieu.donGia}</td>
+                    <td>${taiLieu.moTa}</td>
+                    <td><button class="secondary" onclick="viewDoc(${taiLieu.id})">Xem</button></td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function renderPagination() {
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.innerHTML = ''; // Xóa nội dung cũ
+
+            const totalPages = Math.ceil(docList.length / itemsPerPage);
+            const maxVisibleButtons = 5; // Số nút phân trang tối đa hiển thị
+
+            // Xác định các trang cần hiển thị
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const button = document.createElement('button');
+                    button.innerText = i;
+                    button.disabled = (i === currentPage);
+                    button.addEventListener('click', () => {
+                        currentPage = i;
+                        renderTable();
+                        renderPagination();
+                    });
+                    paginationControls.appendChild(button);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const span = document.createElement('span');
+                    span.innerText = '...';
+                    paginationControls.appendChild(span);
+                }
+            }
+        }
+
+        function viewDoc(id) {
+            window.location.href = `/guestHome/detailDoc?id=${id}`;
+        }
+    </script>
+</body>
+</html>

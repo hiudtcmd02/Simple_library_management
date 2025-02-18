@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Xóa thể loại</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #d9534f;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            width: 150px;
+        }
+        .delete-button {
+            background-color: #d9534f; /* Màu đỏ */
+            color: white;
+        }
+        .delete-button:hover {
+            background-color: #c9302c;
+        }
+        .back-button {
+            background-color: #28a745; /* Màu xanh lá*/
+            color: white;
+        }
+        .back-button:hover {
+            background-color: #218838;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Xác nhận xóa thể loại</h1>
+    <p>Bạn có chắc chắn muốn xóa thể loại này không?</p>
+    <div class="button-container">
+        <button class="delete-button" onclick="deleteDocType()">Xác nhận xóa</button>
+        <button class="back-button" onclick="goBack()">Quay lại</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const docTypeId = urlParams.get('id');
+
+        function deleteDocType() {
+          fetch(`/admin/getData/deleteDocType/${docTypeId}`, {
+            method: 'DELETE'
+          }).then(() => {
+            window.location.href = '/manageDocType';
+          });
+        }
+
+        function goBack() {
+          window.history.back();
+        }
+    </script>
+</body>
+</html>

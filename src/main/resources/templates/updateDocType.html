@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Sửa thể loại</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cập nhật thể loại</h1>
+    <form id="editDocTypeForm">
+      <input type="hidden" id="docTypeId">
+      <label for="docTypeName">Tên thể loại:</label><br>
+      <input type="text" id="docTypeName" required><br><br>
+      <label for="docTypeDescribe">Mô tả:</label><br>
+      <textarea id="docTypeDescribe"></textarea><br><br>
+      <button type="submit">Cập nhật</button>
+      <button onclick="goBack()">Quay lại</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const docTypeId = urlParams.get('id');
+
+            fetch(`/admin/getData/detailDocType/${docTypeId}`)
+                    .then(response => response.json())
+                    .then(docType => {
+                      document.getElementById('docTypeId').value = docType.id;
+                      document.getElementById('docTypeName').value = docType.tenLoaiTaiLieu;
+                      document.getElementById('docTypeDescribe').value = docType.moTa;
+                    });
+
+            document.getElementById('editDocTypeForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                updateDocType();
+            });
+        });
+
+        function updateDocType() {
+            const id = document.getElementById('docTypeId').value;
+            const tenLoaiTaiLieu = document.getElementById('docTypeName').value;
+            const moTa = document.getElementById('docTypeDescribe').value;
+
+            fetch(`/admin/getData/editDocType/${id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ id, tenLoaiTaiLieu, moTa })
+            }).then(() => {
+              window.location.href = '/manageDocType';
+            });
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

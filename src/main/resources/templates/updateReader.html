@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cập nhật thông tin bạn đọc</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Khoảng cách giữa các trường */
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="date"],
+        input[type="email"],
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box; /* Đảm bảo padding không làm tăng chiều rộng */
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cập nhật thông tin bạn đọc</h1>
+    <div class="container">
+        <form id="editBanDocForm">
+            <input type="hidden" id="banDocId">
+            <label for="hoTen">Họ tên:</label>
+            <input type="text" id="hoTen" required>
+            <label for="lop">Lớp:</label>
+            <input type="text" id="lop" >
+            <label for="ngaySinh">Ngày sinh:</label>
+            <input type="date" id="ngaySinh" required>
+            <label for="diaChi">Địa chỉ:</label>
+            <input type="text" id="diaChi">
+            <label for="soDienThoai">Số điện thoại:</label>
+            <input type="text" id="soDienThoai">
+            <label for="email">Email:</label>
+            <input type="email" id="email">
+            <label for="vaiTro">Vai trò:</label>
+            <select id="vaiTro" required>
+                <option value="Học sinh">Học sinh</option>
+                <option value="Giáo viên">Giáo viên</option>
+            </select>
+            <button type="submit">Cập nhật</button>
+            <button type="button" onclick="goBack()">Quay lại</button>
+        </form>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const banDocId = urlParams.get('id');
+
+        fetch(`/readerData/getData/detailReader/${banDocId}`)
+                .then(response => response.json())
+                .then(banDoc => {
+                  document.getElementById('banDocId').value = banDoc.id;
+                  document.getElementById('hoTen').value = banDoc.hoTen;
+                  document.getElementById('lop').value = banDoc.lop;
+                  document.getElementById('ngaySinh').value = banDoc.ngaySinh;
+                  document.getElementById('diaChi').value = banDoc.diaChi;
+                  document.getElementById('soDienThoai').value = banDoc.soDienThoai;
+                  document.getElementById('email').value = banDoc.email;
+                  document.getElementById('vaiTro').value = banDoc.vaiTro; // Cập nhật vai trò từ dữ liệu
+                });
+
+        document.getElementById('editBanDocForm').addEventListener('submit', function(event) {
+          event.preventDefault();
+          updateBanDoc();
+        });
+      });
+
+      function updateBanDoc() {
+        const id = document.getElementById('banDocId').value;
+        const hoTen = document.getElementById('hoTen').value;
+        const lop = document.getElementById('lop').value;
+        const ngaySinh = document.getElementById('ngaySinh').value;
+        const diaChi = document.getElementById('diaChi').value;
+        const soDienThoai = document.getElementById('soDienThoai').value;
+        const email = document.getElementById('email').value;
+        const vaiTro = document.getElementById('vaiTro').value;
+
+        fetch(`/readerData/getData/editReader/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ hoTen, lop, ngaySinh, diaChi, soDienThoai, email, vaiTro })
+        }).then(() => {
+          window.location.href = '/manageReader';
+        });
+      }
+
+      function goBack() {
+        window.history.back();
+      }
+    </script>
+</body>
+</html>

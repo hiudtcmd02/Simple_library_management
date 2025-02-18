@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin chi tiết tài liệu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        p {
+            margin: 10px 0;
+            text-align: left;
+        }
+        span {
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+      <h1>Thông tin chi tiết tài liệu</h1>
+      <div id="docDetails">
+        <img id="docImage" alt="Hình ảnh tài liệu" width="180" height="200">
+        <p>Tên tài liệu: <span id="docName"></span></p>
+        <span id="id" style="display: none;"></span>
+        <p>Tác giả: <span id="docAuthor"></span></p>
+        <p>Thể loại: <span id="docType"></span></p>
+        <p>Nhà xuất bản: <span id="docPublisher"></span></p>
+        <span class="hidden" id="docProducer"></span>
+        <p>Năm xuất bản: <span id="docYear"></span></p>
+        <span class="hidden" id="docMaterial"></span>
+        <p>Đơn giá: <span id="docPrice"></span> VNĐ</p>
+        <p>Số lượng còn lại: <span id="docTotal"></span></p>
+        <span class="hidden" id="docSize"></span>
+        <p>Mô tả: <span id="docDescription"></span></p>
+      </div>
+      <button onclick="goBack()">Quay lại</button>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const docId = urlParams.get('id');
+
+        fetch(`/docData/getData/viewDoc/${docId}`)
+                .then(response => response.json())
+                .then(taiLieu => {
+                  document.getElementById('docImage').src = taiLieu.hinhAnh;
+                  document.getElementById('docName').innerText = taiLieu.tenTaiLieu;
+                  document.getElementById('id').innerText = taiLieu.id;
+                  document.getElementById('docAuthor').innerText = taiLieu.tacGia;
+                  document.getElementById('docType').innerText = taiLieu.loaiTaiLieu;
+                  document.getElementById('docPublisher').innerText = taiLieu.nhaXuatBan;
+                  document.getElementById('docProducer').innerText = taiLieu.nhaSanXuat;
+                  document.getElementById('docYear').innerText = taiLieu.namXuatBan;
+                  document.getElementById('docMaterial').innerText = taiLieu.chatLieu;
+                  document.getElementById('docPrice').innerText = taiLieu.donGia;
+                  document.getElementById('docTotal').innerText = taiLieu.tongSoLuong;
+                  document.getElementById('docSize').innerText = taiLieu.kichThuoc;
+                  document.getElementById('docDescription').innerText = taiLieu.moTa;
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                });
+      });
+
+      function goBack() {
+        window.history.back();
+      }
+    </script>
+</body>
+</html>

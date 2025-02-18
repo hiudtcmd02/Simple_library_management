@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo phiếu mượn</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: auto;
+        }
+        h2 {
+            margin-top: 20px;
+            color: #007bff;
+        }
+        .reader-info, .search-doc{
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px; /* Chiều rộng của ô tìm kiếm */
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            /*background-color: #808080;*/
+            opacity: 0.3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .hidden {
+            display: none; /* Ẩn cột này */
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .pagination button {
+            margin: 0 5px;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tạo phiếu mượn</h1>
+    <div class="container">
+        <div class="reader-info" id="readerDetails">
+            <h2>Thông tin bạn đọc</h2>
+            <span id="readerId" style="display: none;"></span>
+            <p>Họ tên: <span id="hoTen"></span></p>
+            <p>Lớp: <span id="lop"></span></p>
+            <p>Ngày sinh: <span id="ngaySinh"></span></p>
+            <p>Địa chỉ: <span id="diaChi"></span></p>
+            <p>Số điện thoại: <span id="soDienThoai"></span></p>
+            <p>Email: <span id="email"></span></p>
+            <p>Vai trò: <span id="vaiTro"></span></p>
+        </div>
+
+        <div class="search-doc" id="search_Doc_to_lends">
+            <h2>Tìm kiếm tài liệu mượn</h2>
+            <span>Nhập tên tài liệu:</span>
+            <input type="text" id="timKiemTaiLieu" placeholder="Nhập tên tài liệu" />
+            <button id="searchButton">Tìm kiếm</button></br>
+        </div>
+
+        <div id="table_All_Doc">
+            <h2>Danh sách tài liệu</h2>
+            <table id="listDoc" border="1">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Hình ảnh</th>
+                    <th>Tên tài liệu</th>
+                    <th>Đơn giá</th>
+                    <th>Mô tả</th>
+                    <th class="hidden">Số lượng còn lại</th>   <!-- Không hiển thị số lượng ra -->
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="listDocData"></tbody>
+            </table>
+            <label style="font-weight: bolder" for="paginationControls"> Trang: </label>
+            <div class="pagination" id="paginationControls"></div>
+        </div>
+
+        <div id="table_lending_doc">
+            <h2>Danh sách tài liệu mượn:</h2>
+            <table id="listLendDoc" border="1">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên tài liệu</th>
+                    <th>Đơn giá</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="listLendDocData"></tbody>
+            </table>
+        </div>
+        </br>
+
+        <div class="button-container">
+            <button onclick="goBack()">Quay lại</button>
+            <button id="submitButton" onclick="submitLending()">Tạo phiếu mượn</button>
+        </div>
+    </div>
+
+    <script>
+        let docList = [];
+        let lentDocs = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const readerId = urlParams.get('readerId');
+
+            fetch(`/readerData/getData/detailReader/${readerId}`)
+                .then(response => response.json())
+                .then(bandoc => {
+                    document.getElementById('readerId').innerText = bandoc.id;
+                    document.getElementById('hoTen').innerText = bandoc.hoTen;
+                    document.getElementById('lop').innerText = bandoc.lop;
+                    document.getElementById('ngaySinh').innerText = convertDateFormat(bandoc.ngaySinh);
+                    document.getElementById('diaChi').innerText = bandoc.diaChi;
+                    document.getElementById('soDienThoai').innerText = bandoc.soDienThoai;
+                    document.getElementById('email').innerText = bandoc.email;
+                    document.getElementById('vaiTro').innerText = bandoc.vaiTro;
+                });
+
+            fetch(`/docData/getData/listDoc`)
+                .then(response => response.json())
+                .then(docs => {
+                    docList = docs;
+                    renderTable();
+                    renderPagination();
+                });
+        });
+
+        function convertDateFormat(dateString) {
+            // Kiểm tra định dạng đầu vào
+            const regex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regex.test(dateString)) {
+                return dateString; //Trả về giá trị cũ nếu định dạng không phù hợp
+            }
+
+            // Tách các phần của ngày
+            const [year, month, day] = dateString.split('-');
+
+            // Trả về định dạng mới
+            return `${day}-${month}-${year}`;
+        }
+
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const tenTaiLieu = document.getElementById('timKiemTaiLieu').value;
+            searchDoc(tenTaiLieu);
+        });
+
+        function searchDoc(tenTaiLieu) {
+            fetch(`/docData/getData/searchDoc?name=${tenTaiLieu}`)
+                .then(response => response.json())
+                .then(data => {
+                    docList = data;
+                    currentPage = 1; // Reset về trang 1 khi tìm kiếm
+                    renderTable();
+                    renderPagination();
+                });
+        }
+
+        function renderTable() {
+            const list = document.getElementById('listDocData');
+            list.innerHTML = ''; // Xóa nội dung cũ
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = docList.slice(start, end);
+
+            paginatedItems.forEach(taiLieu => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${taiLieu.id}</td>
+                    <td><img src="${taiLieu.hinhAnh}" alt="Hình ảnh" width="120" height="140"></td>
+                    <td>${taiLieu.tenTaiLieu}</td>
+                    <td>${taiLieu.donGia}</td>
+                    <td>${taiLieu.moTa}</td>
+                    <td class="hidden">${taiLieu.tongSoLuong}</td>  <!-- Ẩn cột này -->
+                    <td><button id="lend-${taiLieu.id}" onclick="lendDoc(${taiLieu.id})" ${taiLieu.tongSoLuong <= 0 ? 'disabled' : ''}>Mượn</button></td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function renderPagination() {
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.innerHTML = ''; // Xóa nội dung cũ
+
+            const totalPages = Math.ceil(docList.length / itemsPerPage);
+            const maxVisibleButtons = 5; // Số nút phân trang tối đa hiển thị
+
+            // Xác định các trang cần hiển thị
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const button = document.createElement('button');
+                    button.innerText = i;
+                    button.disabled = (i === currentPage);
+                    button.addEventListener('click', () => {
+                        currentPage = i;
+                        renderTable();
+                        renderPagination();
+                    });
+                    paginationControls.appendChild(button);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const span = document.createElement('span');
+                    span.innerText = '...';
+                    paginationControls.appendChild(span);
+                }
+            }
+        }
+
+        function lendDoc(docId) {
+            const doc = docList.find(d => d.id === docId);
+            if (doc && doc.tongSoLuong > 0) {
+                // Thêm tài liệu vào danh sách mượn
+                lentDocs.push({ id: doc.id, tenTaiLieu: doc.tenTaiLieu, donGia: doc.donGia });
+                doc.tongSoLuong--;
+
+                // Cập nhật giao diện
+                renderLentTable();
+                renderTable();
+            }
+        }
+
+        function renderLentTable() {
+            const lentList = document.getElementById('listLendDocData');
+            lentList.innerHTML = ''; // Xóa nội dung cũ
+
+            lentDocs.forEach(taiLieu => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${taiLieu.id}</td>
+                    <td>${taiLieu.tenTaiLieu}</td>
+                    <td>${taiLieu.donGia}</td>
+                    <td><button onclick="removeLentDoc(${taiLieu.id})">Xóa</button></td>
+                `;
+                lentList.appendChild(row);
+            });
+        }
+
+        function removeLentDoc(docId) {
+            const index = lentDocs.findIndex(d => d.id === docId);
+            if (index > -1) {
+                const doc = docList.find(d => d.id === docId);
+                if (doc) {
+                    doc.tongSoLuong++; // Tăng số lượng lại
+                }
+                lentDocs.splice(index, 1); // Xóa tài liệu khỏi danh sách mượn
+                renderLentTable();
+                renderTable();
+            }
+        }
+
+        function submitLending() {
+            const readerId = document.getElementById('readerId').innerText;
+            const lentDocIds = lentDocs.map(doc => doc.id);
+
+            const payload = {
+                readerId: readerId,
+                lentDocIds: lentDocIds
+            };
+
+            fetch('/lendDocData/postData/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Phiếu mượn đã được tạo thành công!');
+                        lentDocs = []; // Xóa danh sách mượn
+                        renderLentTable(); // Cập nhật bảng mượn
+                    } else {
+                        alert('Đã xảy ra lỗi khi gửi phiếu mượn.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                    alert('Đã xảy ra lỗi khi gửi phiếu mượn.');
+                });
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <title>Trang chủ nhân viên</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                padding: 20px;
+                background-color: #f9f9f9;
+            }
+            h1 {
+                color: #333;
+                text-align: center;
+            }
+            .container {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                max-width: 600px;
+                margin: auto;
+            }
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 5px; /* Khoảng cách giữa các nút */
+            }
+            button {
+                background-color: #28a745;
+                color: white;
+                padding: 10px;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: background-color 0.3s; /* Hiệu ứng chuyển màu */
+            }
+            button:hover {
+                background-color: #218838;
+            }
+            @media (max-width: 600px) {
+                button {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Trang chủ nhân viên thư viện</h1>
+        <div class="container">
+            <div class="button-container">
+                <button onclick="window.location.href='/manageDocType'">Quản lý thể loại</button></br>
+                <button onclick="window.location.href='/manageDoc'">Quản lý tài liệu</button></br>
+                <button onclick="window.location.href='/manageReader'">Quản lý bạn đọc</button></br>
+                <button onclick="window.location.href='/lendDocuments'">Cho mượn tài liệu</button></br>
+                <button onclick="window.location.href='/receiveDocuments'">Nhận trả tài liệu</button></br>
+                <button id="logout">Đăng xuất</button></br>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('logout').addEventListener('click', function() {
+                fetch('/api/logout')
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = '/login'; // Chuyển hướng về trang đăng nhập
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        </script>
+    </body>
+</html>

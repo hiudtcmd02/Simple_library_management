@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin chi tiết thể loại</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        span {
+            font-weight: bold;
+            color: #007bff;
+        }
+        button {
+            display: block;
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Thông tin thể loại</h1>
+    <div id="docTypeDetails">
+        <p>ID: <span id="docTypeId"></span></p>
+        <p>Tên thể loại: <span id="docTypeName"></span></p>
+        <p>Mô tả: <span id="docTypeDescription"></span></p>
+    </div>
+<!--    <button onclick="window.location.href='/manageDocType'">Quay lại</button>-->
+    <button onclick="goBack()">Quay lại</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const docTypeId = urlParams.get('id');
+
+        fetch(`/admin/getData/detailDocType/${docTypeId}`)
+            .then(response => response.json())
+            .then(docType => {
+                document.getElementById('docTypeId').innerText = docType.id;
+                document.getElementById('docTypeName').innerText = docType.tenLoaiTaiLieu;
+                document.getElementById('docTypeDescription').innerText = docType.moTa;
+            });
+    });
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
+</body>
+</html>

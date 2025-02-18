@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tìm kiếm bạn đọc trả tài liệu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: auto;
+        }
+        .search-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Khoảng cách giữa các phần tử */
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px; /* Chiều rộng của ô tìm kiếm */
+        }
+        span {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .pagination button {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tìm kiếm bạn đọc cần trả tài liệu</h1>
+
+    <div class="container">
+        <div class="search-container">
+            <span>Tìm kiếm bạn đọc:</span>
+            <input type="text" id="timKiemBanDoc" placeholder="Nhập tên bạn đọc" />
+            <button id="searchButton">Tìm kiếm</button>
+        </div>
+
+        <div class="button-container">
+            <button onclick="window.location.href='/adminHome'">Trang chủ quản lý</button>
+        </div>
+
+        <div id="table_All_Reader">
+            <h2>Danh sách bạn đọc</h2>
+            <table id="listReader" border="1">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Họ và tên</th>
+                    <th>Lớp</th>
+                    <th>Ngày sinh</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="dataListReader"></tbody>
+            </table>
+            <label style="font-weight: bolder" for="paginationControls"> Trang: </label>
+            <div class="pagination" id="paginationControls"></div>
+        </div>
+    </div>
+
+    <script>
+        let readerList = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch(`/receiveDocData/getData/listReader`)
+                .then(response => response.json())
+                .then(data => {
+                    readerList = data;
+                    renderTable();
+                    renderPagination();
+                });
+        });
+
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const tenBanDoc = document.getElementById('timKiemBanDoc').value;
+            searchReader(tenBanDoc);
+        });
+
+        function searchReader(tenBanDoc) {
+            fetch(`/receiveDocData/getData/searchReader?name=${tenBanDoc}`)
+                .then(response => response.json())
+                .then(data => {
+                    readerList = data;
+                    currentPage = 1; // Reset về trang 1 khi tìm kiếm
+                    renderTable();
+                    renderPagination();
+                });
+        }
+
+        function renderTable() {
+            const list = document.getElementById('dataListReader');
+            list.innerHTML = ''; // Xóa nội dung cũ
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedItems = readerList.slice(start, end);
+
+            paginatedItems.forEach(bandoc => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                            <td>${bandoc.id}</td>
+                            <td>${bandoc.hoTen}</td>
+                            <td>${bandoc.lop}</td>
+                            <td>${convertDateFormat(bandoc.ngaySinh)}</td>
+                            <td>${bandoc.soDienThoai}</td>
+                            <td>${bandoc.vaiTro}</td>
+                            <td><button onclick="toReceiveDocumentStep(${bandoc.id})">Chọn</button></td>
+                        `;
+                list.appendChild(row);
+            });
+        }
+
+        function renderPagination() {
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.innerHTML = ''; // Xóa nội dung cũ
+
+            const totalPages = Math.ceil(readerList.length / itemsPerPage);
+            const maxVisibleButtons = 5; // Số nút phân trang tối đa hiển thị
+
+            // Xác định các trang cần hiển thị
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const button = document.createElement('button');
+                    button.innerText = i;
+                    button.disabled = (i === currentPage);
+                    button.addEventListener('click', () => {
+                        currentPage = i;
+                        renderTable();
+                        renderPagination();
+                    });
+                    paginationControls.appendChild(button);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const span = document.createElement('span');
+                    span.innerText = '...';
+                    paginationControls.appendChild(span);
+                }
+            }
+        }
+
+        function convertDateFormat(dateString) {
+            // Kiểm tra định dạng đầu vào
+            const regex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regex.test(dateString)) {
+                return dateString; //Trả về giá trị cũ nếu định dạng không phù hợp
+            }
+
+            // Tách các phần của ngày
+            const [year, month, day] = dateString.split('-');
+
+            // Trả về định dạng mới
+            return `${day}-${month}-${year}`;
+        }
+
+        function toReceiveDocumentStep(id) {
+            window.location.href = `/receiveDocuments/createReceiveForm?readerId=${id}`;
+        }
+
+    </script>
+</body>
+</html>
