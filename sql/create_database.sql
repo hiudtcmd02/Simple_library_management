@@ -1,5 +1,5 @@
-CREATE SCHEMA `test_manage_library` ;
-use `test_manage_library`;
+CREATE SCHEMA `manage_library` ;
+use `manage_library`;
 
 create table BanDoc(
 	id int not null auto_increment,
@@ -56,7 +56,7 @@ create table TaiLieu(
     donGia decimal(18,2) not null,
     tongSoLuong int not null,
     kichThuoc varchar(255),
-    moTa varchar(255),
+    moTa TEXT,
     kichHoat bit not null,
     LoaiTaiLieuid int not null,
     primary key (id),

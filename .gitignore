@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Trong file .gitignore (ở thư mục gốc)
+src/main/resources/data-info.properties
