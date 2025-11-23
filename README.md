@@ -7,3 +7,10 @@ HỆ THỐNG QUẢN LÝ THƯ VIỆN TRƯỜNG HỌC ĐƠN GIẢN
   + Tạo thẻ bạn đọc
   + Cho bạn đọc mượn tài liệu
   + Nhận trả tài liệu từ bạn đọc
+
+Lưu ý khi cài đặt:
+Trong thư mục src/main/resources
+Tạo file data-info.properties, chứa:
+
+spring.datasource.username=your_username
+spring.datasource.password=your_password
